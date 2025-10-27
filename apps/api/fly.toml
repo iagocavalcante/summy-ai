@@ -1,0 +1,45 @@
+# Fly.io configuration for Summ AI API
+# Documentation: https://fly.io/docs/reference/configuration/
+
+app = "summ-ai-api"
+primary_region = "gru"  # Sao Paulo, Brazil - change as needed
+
+[build]
+  # Use the Dockerfile in the apps/api directory
+  dockerfile = "Dockerfile"
+  # Build context is the project root
+  build-context = "../.."
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3000"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/health"
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1
+
+# Auto-scaling configuration
+[metrics]
+  port = 3000
+  path = "/metrics"
