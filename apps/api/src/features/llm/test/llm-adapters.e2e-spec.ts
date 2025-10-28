@@ -55,7 +55,7 @@ describe('LLM Adapters (e2e)', () => {
       try {
         await llmService.summarize('Test text');
         expect(geminiSpy).toHaveBeenCalled();
-      } catch (error) {
+      } catch {
         // May fail due to invalid API key, but spy should still be called
         expect(geminiSpy).toHaveBeenCalled();
       }
@@ -108,7 +108,7 @@ describe('LLM Adapters (e2e)', () => {
       try {
         await llmService.summarize('Test text');
         expect(openaiSpy).toHaveBeenCalled();
-      } catch (error) {
+      } catch {
         // May fail due to invalid API key, but spy should still be called
         expect(openaiSpy).toHaveBeenCalled();
       }
@@ -156,7 +156,7 @@ describe('LLM Adapters (e2e)', () => {
         await llmService.summarize('Test text');
         expect(geminiSpy).toHaveBeenCalled();
         expect(openaiSpy).not.toHaveBeenCalled();
-      } catch (error) {
+      } catch {
         // May fail due to invalid API key
         expect(geminiSpy).toHaveBeenCalled();
       }
@@ -188,12 +188,14 @@ describe('LLM Adapters (e2e)', () => {
     it('should fallback for streaming when Gemini fails', async () => {
       const geminiSpy = jest
         .spyOn(geminiAdapter, 'summarizeStream')
-        .mockImplementation(async function* () {
+        // eslint-disable-next-line require-yield, @typescript-eslint/require-await
+        .mockImplementation(async function* (): AsyncGenerator<never> {
           throw new Error('Gemini stream error');
         });
 
       const openaiSpy = jest
         .spyOn(openaiAdapter, 'summarizeStream')
+        // eslint-disable-next-line @typescript-eslint/require-await
         .mockImplementation(async function* () {
           yield { text: 'OpenAI ', done: false };
           yield { text: 'fallback', done: false };
@@ -208,7 +210,7 @@ describe('LLM Adapters (e2e)', () => {
             expect(chunk.provider).toBe('openai');
           }
         }
-      } catch (error) {
+      } catch {
         // Expected - may fail due to error handling
       }
 

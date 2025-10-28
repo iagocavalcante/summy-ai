@@ -5,7 +5,7 @@
 jest.setTimeout(30000);
 
 // Handle unhandled rejections
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason) => {
   console.error('Unhandled Rejection in e2e test:', reason);
 });
 

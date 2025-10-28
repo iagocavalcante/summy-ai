@@ -21,7 +21,10 @@ async function bootstrap() {
       : ['http://localhost:3001'];
 
     app.enableCors({
-      origin: (origin, callback) => {
+      origin: (
+        origin: string | undefined,
+        callback: (err: Error | null, allow?: boolean) => void,
+      ) => {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) {
           callback(null, true);
@@ -74,20 +77,20 @@ async function bootstrap() {
         await app.close();
         logger.log('Application closed successfully');
         process.exit(0);
-      } catch (error) {
+      } catch (error: unknown) {
         logger.error('Error during shutdown', error);
         process.exit(1);
       }
     };
 
-    process.on('SIGTERM', () => shutdown('SIGTERM'));
-    process.on('SIGINT', () => shutdown('SIGINT'));
+    process.on('SIGTERM', () => void shutdown('SIGTERM'));
+    process.on('SIGINT', () => void shutdown('SIGINT'));
 
     const port = process.env.PORT ?? 3000;
     await app.listen(port);
-    logger.log(`API running on http://localhost:${port}`);
+    logger.log(`API running on http://localhost:${String(port)}`);
     logger.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Failed to start application', error);
     process.exit(1);
   }

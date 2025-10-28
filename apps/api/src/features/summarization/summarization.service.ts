@@ -14,7 +14,11 @@ import { CreateSummarizationDto } from './dto/create-summarization.dto';
 import { SummarizationJob } from './summarization.processor';
 import { CostCalculator } from '../../common/utils/cost-calculator';
 import { AnalyticsUpdaterService } from '../../common/services/analytics-updater.service';
-import { REQUEST_STATUS, LLM_PROVIDERS } from '../../common/constants';
+import {
+  REQUEST_STATUS,
+  LLM_PROVIDERS,
+  LLMProviderType,
+} from '../../common/constants';
 
 @Injectable()
 export class SummarizationService {
@@ -63,7 +67,7 @@ export class SummarizationService {
         status: request.status,
         createdAt: request.createdAt,
       };
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.error('Failed to create summarization request', {
         error,
         userId: createDto.userId,
@@ -141,7 +145,7 @@ export class SummarizationService {
 
       // Calculate cost
       const costEstimate = CostCalculator.calculate(
-        provider as any,
+        provider as LLMProviderType,
         tokensInput,
         tokensOutput,
       );
@@ -162,7 +166,7 @@ export class SummarizationService {
 
       // Update analytics
       await this.analyticsUpdater.updateAnalytics({
-        provider: provider as any,
+        provider: provider as LLMProviderType,
         success: true,
         inputTokens: tokensInput,
         outputTokens: tokensOutput,
@@ -194,7 +198,7 @@ export class SummarizationService {
         .where(eq(summarizationRequests.id, requestId));
 
       await this.analyticsUpdater.updateAnalytics({
-        provider: LLM_PROVIDERS.UNKNOWN as any,
+        provider: LLM_PROVIDERS.UNKNOWN as LLMProviderType,
         success: false,
         inputTokens: 0,
         outputTokens: 0,
@@ -222,7 +226,7 @@ export class SummarizationService {
       }
 
       return request;
-    } catch (error) {
+    } catch (error: unknown) {
       if (
         error instanceof NotFoundException ||
         error instanceof BadRequestException
@@ -253,7 +257,7 @@ export class SummarizationService {
       }
 
       return query;
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.error('Error fetching summarization requests', error);
       throw new BadRequestException('Failed to fetch summarization requests');
     }

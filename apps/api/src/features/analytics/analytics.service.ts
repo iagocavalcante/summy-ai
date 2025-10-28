@@ -1,5 +1,5 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import { eq, gte, desc, sum, avg } from 'drizzle-orm';
+import { gte, desc, sum, avg } from 'drizzle-orm';
 import { DbService } from '../../db/db.service';
 import { summarizationRequests, analytics } from '../../db/schema';
 

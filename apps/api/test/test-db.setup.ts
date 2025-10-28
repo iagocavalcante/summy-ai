@@ -6,7 +6,8 @@ export class TestDatabase {
   private client: postgres.Sql | null = null;
   private db: ReturnType<typeof drizzle> | null = null;
 
-  async connect() {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async connect(): Promise<void> {
     const connectionString =
       process.env.TEST_DATABASE_URL || process.env.DATABASE_URL;
     if (!connectionString) {

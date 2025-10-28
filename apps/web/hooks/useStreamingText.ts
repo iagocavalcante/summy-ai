@@ -62,8 +62,10 @@ export function useStreamingText(
 
     setIsStreaming(true);
 
-    // Split text into words
-    const words = fullText.split(' ');
+    // Split text into words while preserving whitespace/newlines
+    // Match words and whitespace separately to reconstruct exactly
+    const tokens = fullText.match(/\S+|\s+/g) || [];
+    const words = tokens.filter(token => /\S/.test(token)); // Only count non-whitespace as words
 
     // Clear any existing timeout
     if (timeoutRef.current) {
@@ -74,7 +76,18 @@ export function useStreamingText(
     const showNextChunk = () => {
       if (wordIndexRef.current < words.length) {
         const endIndex = Math.min(wordIndexRef.current + wordsPerChunk, words.length);
-        const chunk = words.slice(0, endIndex).join(' ');
+
+        // Reconstruct text up to endIndex, preserving all whitespace
+        let chunk = '';
+        let wordCount = 0;
+        for (const token of tokens) {
+          if (/\S/.test(token)) {
+            wordCount++;
+            if (wordCount > endIndex) break;
+          }
+          chunk += token;
+        }
+
         setDisplayedText(chunk);
         wordIndexRef.current = endIndex;
 
@@ -87,7 +100,8 @@ export function useStreamingText(
 
     // Start from current position if text is growing
     if (fullText.startsWith(previousTextRef.current)) {
-      wordIndexRef.current = previousTextRef.current.split(' ').filter(w => w).length;
+      const prevTokens = previousTextRef.current.match(/\S+|\s+/g) || [];
+      wordIndexRef.current = prevTokens.filter(token => /\S/.test(token)).length;
     }
 
     showNextChunk();

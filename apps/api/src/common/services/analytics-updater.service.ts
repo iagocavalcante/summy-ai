@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { DbService } from '../../db/db.service';
-import { analytics } from '../../db/schema';
+import { analytics, Analytics } from '../../db/schema';
 import { LLMProviderType, LLM_PROVIDERS } from '../constants';
 
 export interface AnalyticsUpdate {
@@ -37,7 +37,7 @@ export class AnalyticsUpdaterService {
       } else {
         await this.createNewAnalytics(today, update, totalTokens);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.error('Failed to update analytics', {
         error,
         update,
@@ -47,7 +47,7 @@ export class AnalyticsUpdaterService {
   }
 
   private async updateExistingAnalytics(
-    existing: any,
+    existing: Analytics,
     update: AnalyticsUpdate,
     totalTokens: number,
   ): Promise<void> {

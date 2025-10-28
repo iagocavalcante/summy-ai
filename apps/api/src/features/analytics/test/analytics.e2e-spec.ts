@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
+import request, { Response } from 'supertest';
 import { AppModule } from '../../../app.module';
 import { TestDatabase } from '../../../../test/test-db.setup';
 import {
@@ -43,7 +44,7 @@ describe('Analytics API (e2e)', () => {
 
   describe('GET /analytics/summary', () => {
     it('should return analytics summary with empty data', async () => {
-      const response = await request(app.getHttpServer())
+      const response: Response = await request(app.getHttpServer())
         .get('/analytics/summary')
         .expect(200);
 
@@ -51,8 +52,11 @@ describe('Analytics API (e2e)', () => {
       expect(response.body).toHaveProperty('today');
       expect(response.body).toHaveProperty('recentRequests');
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(response.body.allTime.totalRequests).toBe(0);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(response.body.today.totalRequests).toBe(0);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(Array.isArray(response.body.recentRequests)).toBe(true);
     });
 
@@ -61,7 +65,7 @@ describe('Analytics API (e2e)', () => {
       jest.spyOn(llmService, 'summarize').mockResolvedValue(mockLLMResponse);
 
       // Create and process a request
-      const createResponse = await request(app.getHttpServer())
+      const createResponse: Response = await request(app.getHttpServer())
         .post('/summarization')
         .send({ text: 'This is a test article about technology.' })
         .expect(201);
@@ -70,11 +74,13 @@ describe('Analytics API (e2e)', () => {
       await delay(1000);
 
       // Get analytics
-      const response = await request(app.getHttpServer())
+      const response: Response = await request(app.getHttpServer())
         .get('/analytics/summary')
         .expect(200);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(response.body.recentRequests.length).toBeGreaterThan(0);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(response.body.recentRequests[0].id).toBe(createResponse.body.id);
     }, 10000);
 
@@ -87,17 +93,19 @@ describe('Analytics API (e2e)', () => {
 
       await delay(100);
 
-      const response = await request(app.getHttpServer())
+      const response: Response = await request(app.getHttpServer())
         .get('/analytics/summary')
         .expect(200);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if (response.body.recentRequests.length > 0) {
-        const request = response.body.recentRequests[0];
-        expect(request).toHaveProperty('id');
-        expect(request).toHaveProperty('status');
-        expect(request).toHaveProperty('llmProvider');
-        expect(request).toHaveProperty('duration');
-        expect(request).toHaveProperty('createdAt');
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        const requestItem = response.body.recentRequests[0];
+        expect(requestItem).toHaveProperty('id');
+        expect(requestItem).toHaveProperty('status');
+        expect(requestItem).toHaveProperty('llmProvider');
+        expect(requestItem).toHaveProperty('duration');
+        expect(requestItem).toHaveProperty('createdAt');
       }
     });
 
@@ -119,15 +127,21 @@ describe('Analytics API (e2e)', () => {
         openaiRequests: 4,
       });
 
-      const response = await request(app.getHttpServer())
+      const response: Response = await request(app.getHttpServer())
         .get('/analytics/summary')
         .expect(200);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(response.body.allTime.totalRequests).toBe(10);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(response.body.allTime.successfulRequests).toBe(8);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(response.body.allTime.failedRequests).toBe(2);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(response.body.allTime.totalTokensUsed).toBe(1000);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(response.body.allTime.geminiRequests).toBe(6);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(response.body.allTime.openaiRequests).toBe(4);
     });
 
@@ -165,24 +179,29 @@ describe('Analytics API (e2e)', () => {
         openaiRequests: 2,
       });
 
-      const response = await request(app.getHttpServer())
+      const response: Response = await request(app.getHttpServer())
         .get('/analytics/summary')
         .expect(200);
 
       // All-time should include both days
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(response.body.allTime.totalRequests).toBe(8);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(response.body.allTime.successfulRequests).toBe(7);
 
       // Today should only include today
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(response.body.today.totalRequests).toBe(3);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(response.body.today.successfulRequests).toBe(2);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(response.body.today.failedRequests).toBe(1);
     });
   });
 
   describe('GET /analytics', () => {
     it('should return analytics for default period (7 days)', async () => {
-      const response = await request(app.getHttpServer())
+      const response: Response = await request(app.getHttpServer())
         .get('/analytics')
         .expect(200);
 
@@ -213,13 +232,15 @@ describe('Analytics API (e2e)', () => {
       }
 
       // Get last 3 days
-      const response = await request(app.getHttpServer())
+      const response: Response = await request(app.getHttpServer())
         .get('/analytics?days=3')
         .expect(200);
 
       expect(Array.isArray(response.body)).toBe(true);
       // Days parameter might include today, so allow up to 4 records
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(response.body.length).toBeLessThanOrEqual(4);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(response.body.length).toBeGreaterThan(0);
     });
 
@@ -246,22 +267,26 @@ describe('Analytics API (e2e)', () => {
         });
       }
 
-      const response = await request(app.getHttpServer())
+      const response: Response = await request(app.getHttpServer())
         .get('/analytics?days=3')
         .expect(200);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(response.body.length).toBeGreaterThan(0);
 
       // Verify descending order
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       for (let i = 0; i < response.body.length - 1; i++) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         const current = new Date(response.body[i].date);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         const next = new Date(response.body[i + 1].date);
         expect(current >= next).toBe(true);
       }
     });
 
     it('should return empty array when no analytics data exists', async () => {
-      const response = await request(app.getHttpServer())
+      const response: Response = await request(app.getHttpServer())
         .get('/analytics?days=7')
         .expect(200);
 
@@ -294,8 +319,10 @@ describe('Analytics API (e2e)', () => {
         .where(eq(analytics.date, today));
 
       expect(todayAnalytics).toBeDefined();
-      expect(todayAnalytics.totalRequests).toBeGreaterThan(0);
-      expect(todayAnalytics.successfulRequests).toBeGreaterThan(0);
+      if (todayAnalytics) {
+        expect(todayAnalytics.totalRequests).toBeGreaterThan(0);
+        expect(todayAnalytics.successfulRequests).toBeGreaterThan(0);
+      }
     }, 10000);
 
     it('should track failed requests in analytics', async () => {

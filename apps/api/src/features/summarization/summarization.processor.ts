@@ -7,7 +7,11 @@ import { summarizationRequests } from '../../db/schema';
 import { LLMService } from '../llm/llm.service';
 import { CostCalculator } from '../../common/utils/cost-calculator';
 import { AnalyticsUpdaterService } from '../../common/services/analytics-updater.service';
-import { REQUEST_STATUS, LLM_PROVIDERS } from '../../common/constants';
+import {
+  REQUEST_STATUS,
+  LLM_PROVIDERS,
+  LLMProviderType,
+} from '../../common/constants';
 
 export interface SummarizationJob {
   requestId: string;
@@ -48,7 +52,7 @@ export class SummarizationProcessor extends WorkerHost {
 
       // Calculate cost estimate
       const costEstimate = CostCalculator.calculate(
-        result.provider as any,
+        result.provider as LLMProviderType,
         result.tokensInput || 0,
         result.tokensOutput || 0,
       );
@@ -69,7 +73,7 @@ export class SummarizationProcessor extends WorkerHost {
 
       // Update analytics
       await this.analyticsUpdater.updateAnalytics({
-        provider: result.provider as any,
+        provider: result.provider as LLMProviderType,
         success: true,
         inputTokens: result.tokensInput || 0,
         outputTokens: result.tokensOutput || 0,
@@ -106,7 +110,7 @@ export class SummarizationProcessor extends WorkerHost {
         .where(eq(summarizationRequests.id, requestId));
 
       await this.analyticsUpdater.updateAnalytics({
-        provider: LLM_PROVIDERS.UNKNOWN as any,
+        provider: LLM_PROVIDERS.UNKNOWN as LLMProviderType,
         success: false,
         inputTokens: 0,
         outputTokens: 0,

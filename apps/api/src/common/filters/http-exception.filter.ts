@@ -31,9 +31,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
         typeof exceptionResponse === 'object' &&
         exceptionResponse !== null
       ) {
-        const response = exceptionResponse as any;
-        message = response.message || message;
-        error = response.error || error;
+        const response = exceptionResponse as Record<string, unknown>;
+        message = (response.message as string) || message;
+        error = (response.error as string) || error;
       }
     } else if (exception instanceof Error) {
       message = exception.message;
@@ -63,7 +63,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     });
   }
 
-  private getSafeMessage(status: number): string {
+  private getSafeMessage(status: HttpStatus): string {
     switch (status) {
       case HttpStatus.BAD_REQUEST:
         return 'Bad Request';

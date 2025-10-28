@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
@@ -223,7 +227,9 @@ describe('Summarization API (e2e)', () => {
         .get(`/summarization/${id}`)
         .expect(200);
 
-      expect(['PENDING', 'PROCESSING', 'COMPLETED']).toContain(statusResponse.body.status);
+      expect(['PENDING', 'PROCESSING', 'COMPLETED']).toContain(
+        statusResponse.body.status,
+      );
 
       // 4. Verify in list
       const listResponse = await request(app.getHttpServer())
