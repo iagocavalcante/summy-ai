@@ -1,8 +1,8 @@
 # Build stage
 FROM node:20-alpine AS builder
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install pnpm globally
+RUN npm install -g pnpm@9.15.0
 
 WORKDIR /app
 
@@ -31,8 +31,8 @@ RUN pnpm build
 # Production stage
 FROM node:20-alpine AS runner
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install pnpm globally
+RUN npm install -g pnpm@9.15.0
 
 WORKDIR /app
 
