@@ -38,8 +38,3 @@ primary_region = "gru"  # Sao Paulo, Brazil - change as needed
   memory = "1gb"
   cpu_kind = "shared"
   cpus = 1
-
-# Auto-scaling configuration
-[metrics]
-  port = 3000
-  path = "/metrics"

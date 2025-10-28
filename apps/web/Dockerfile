@@ -20,6 +20,10 @@ RUN pnpm install --frozen-lockfile
 COPY apps/web ./apps/web
 COPY packages ./packages
 
+# Build argument for API URL (passed from fly.toml)
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 # Build the application
 WORKDIR /app/apps/web
 RUN pnpm build
@@ -32,18 +36,22 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
 
+# Build argument for API URL
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Copy necessary files from builder
-COPY --from=builder /app/apps/web/next.config.ts ./
-COPY --from=builder /app/apps/web/package.json ./
+# The standalone build puts files in .next/standalone with the full workspace structure
 COPY --from=builder /app/apps/web/.next/standalone ./
-COPY --from=builder /app/apps/web/.next/static ./.next/static
-COPY --from=builder /app/apps/web/public ./public
+COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder /app/apps/web/public ./apps/web/public
 
 EXPOSE 3001
 
 ENV PORT=3001
 
-CMD ["node", "server.js"]
+# The server.js is located in the apps/web directory within standalone
+CMD ["node", "apps/web/server.js"]

@@ -39,17 +39,20 @@ export class AnalyticsService {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
       // Execute all queries in parallel for better performance
       const [
         todayAnalyticsResult,
         recentRequestsResult,
         allTimeAnalyticsResult,
       ] = await Promise.all([
-        // Get today's analytics
+        // Get today's analytics (using date range since date is timestamp)
         this.dbService.db
           .select()
           .from(analytics)
-          .where(eq(analytics.date, today))
+          .where(gte(analytics.date, today))
           .limit(1),
 
         // Get recent requests

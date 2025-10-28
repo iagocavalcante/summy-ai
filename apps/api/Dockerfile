@@ -27,22 +27,28 @@ RUN pnpm build
 # Production stage
 FROM node:20-alpine AS runner
 
-# Install pnpm - use specific version
+# Install pnpm
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy package files and node_modules
-COPY --from=builder /app/apps/api/package.json ./
-COPY --from=builder /app/apps/api/node_modules ./node_modules
-COPY --from=builder /app/node_modules/.pnpm ./node_modules/.pnpm
-
 # Copy built application
 COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/apps/api/drizzle ./drizzle
-COPY --from=builder /app/apps/api/drizzle.config.ts ./
+COPY --from=builder /app/apps/api/drizzle.config.ts ./drizzle.config.ts
+COPY --from=builder /app/apps/api/package.json ./package.json
+
+# Copy workspace files for pnpm deploy
+COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+
+# Use pnpm deploy to install production dependencies without symlinks
+# This creates a proper node_modules with all dependencies copied, not linked
+RUN pnpm deploy --prod --filter=api /tmp/deploy && \
+    mv /tmp/deploy/node_modules ./node_modules && \
+    rm -rf /tmp/deploy
 
 # Expose port
 EXPOSE 3000

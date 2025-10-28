@@ -1,4 +1,4 @@
-# Summ AI
+# [Summ AI](https://summ-ai-web.fly.dev/)
 
 AI-powered text summarization using Gemini and OpenAI with intelligent fallback.
 
