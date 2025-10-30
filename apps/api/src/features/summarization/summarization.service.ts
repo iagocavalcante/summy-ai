@@ -3,6 +3,8 @@ import {
   Logger,
   NotFoundException,
   BadRequestException,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -14,10 +16,12 @@ import { CreateSummarizationDto } from './dto/create-summarization.dto';
 import { SummarizationJob } from './summarization.processor';
 import { CostCalculator } from '../../common/utils/cost-calculator';
 import { AnalyticsUpdaterService } from '../../common/services/analytics-updater.service';
+import { RateLimiterService } from '../../common/services/rate-limiter.service';
 import {
   REQUEST_STATUS,
   LLM_PROVIDERS,
   LLMProviderType,
+  RATE_LIMIT_CONFIG,
 } from '../../common/constants';
 
 @Injectable()
@@ -28,11 +32,41 @@ export class SummarizationService {
     private dbService: DbService,
     private llmService: LLMService,
     private analyticsUpdater: AnalyticsUpdaterService,
+    private rateLimiter: RateLimiterService,
     @InjectQueue('summarization') private summarizationQueue: Queue,
   ) {}
 
-  async create(createDto: CreateSummarizationDto) {
+  async create(createDto: CreateSummarizationDto, requestIp: string) {
     try {
+      // Check rate limit using Redis-based rate limiter
+      const rateLimitInfo = await this.rateLimiter.checkLimit(requestIp, {
+        max: RATE_LIMIT_CONFIG.SUMMARIZATION.MAX,
+        windowMs: RATE_LIMIT_CONFIG.SUMMARIZATION.WINDOW_MS,
+        keyPrefix: RATE_LIMIT_CONFIG.SUMMARIZATION.KEY_PREFIX,
+      });
+
+      if (!rateLimitInfo.allowed) {
+        this.logger.warn(
+          `Rate limit exceeded for IP: ${requestIp}. Retry after: ${rateLimitInfo.retryAfter}s`,
+        );
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.TOO_MANY_REQUESTS,
+            message: `Rate limit exceeded. You can make ${rateLimitInfo.limit} requests per hour. Please try again in ${rateLimitInfo.retryAfter} seconds.`,
+            error: 'Too Many Requests',
+            retryAfter: rateLimitInfo.retryAfter,
+            resetAt: rateLimitInfo.resetAt.toISOString(),
+            limit: rateLimitInfo.limit,
+            remaining: 0,
+          },
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
+
+      this.logger.log(
+        `Rate limit check passed for ${requestIp}: ${rateLimitInfo.remaining}/${rateLimitInfo.limit} remaining`,
+      );
+
       // Create request record
       const [request] = await this.dbService.db
         .insert(summarizationRequests)
@@ -41,6 +75,8 @@ export class SummarizationService {
           status: REQUEST_STATUS.PENDING,
           llmProvider: 'pending',
           userId: createDto.userId,
+          requestIp,
+          countRequests: 1,
         })
         .returning();
 
@@ -68,6 +104,11 @@ export class SummarizationService {
         createdAt: request.createdAt,
       };
     } catch (error: unknown) {
+      // Re-throw HttpException (like rate limit errors) without wrapping
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      
       this.logger.error('Failed to create summarization request', {
         error,
         userId: createDto.userId,

@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { createSummarization, streamSummary } from '@/lib/api';
+import { createSummarization, streamSummary, RateLimitError, type RateLimitInfo } from '@/lib/api';
 import { ThinkingIndicator } from '@/components/ui/ThinkingIndicator';
 import { SuccessAnimation } from '@/components/ui/SuccessAnimation';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { MarkdownContent } from '@/components/ui/MarkdownContent';
+import { RateLimitError as RateLimitErrorComponent } from '@/components/ui/RateLimitError';
 import { useStreamingText } from '@/hooks/useStreamingText';
 
 interface Props {
@@ -54,6 +55,7 @@ export default function SummarizationForm({ onSummaryComplete }: Props) {
   const [summary, setSummary] = useState('');
   const [phase, setPhase] = useState<StreamingPhase>('idle');
   const [error, setError] = useState('');
+  const [rateLimitInfo, setRateLimitInfo] = useState<RateLimitInfo | null>(null);
   const [provider, setProvider] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -69,6 +71,7 @@ export default function SummarizationForm({ onSummaryComplete }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setRateLimitInfo(null);
     setSummary('');
     setProvider('');
     setShowSuccess(false);
@@ -108,7 +111,12 @@ export default function SummarizationForm({ onSummaryComplete }: Props) {
         },
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      if (err instanceof RateLimitError) {
+        setError(err.message);
+        setRateLimitInfo(err.rateLimitInfo);
+      } else {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      }
       setPhase('idle');
     }
   };
@@ -117,6 +125,7 @@ export default function SummarizationForm({ onSummaryComplete }: Props) {
     setText('');
     setSummary('');
     setError('');
+    setRateLimitInfo(null);
     setProvider('');
     setPhase('idle');
     setShowSuccess(false);
@@ -269,8 +278,20 @@ export default function SummarizationForm({ onSummaryComplete }: Props) {
         </div>
       )}
 
-      {/* Error State */}
-      {error && (
+      {/* Rate Limit Error State */}
+      {rateLimitInfo && error && (
+        <RateLimitErrorComponent
+          message={error}
+          rateLimitInfo={rateLimitInfo}
+          onDismiss={() => {
+            setError('');
+            setRateLimitInfo(null);
+          }}
+        />
+      )}
+
+      {/* General Error State */}
+      {error && !rateLimitInfo && (
         <div className="mt-6 p-5 bg-error-50 border border-error-200 rounded-lg shadow-sm animate-slide-in-from-top">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 mt-0.5">

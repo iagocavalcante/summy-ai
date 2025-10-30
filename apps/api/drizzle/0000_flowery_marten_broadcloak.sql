@@ -25,6 +25,8 @@ CREATE TABLE "summarization_requests" (
 	"duration" integer,
 	"error_message" text,
 	"user_id" text,
+	"request_ip" text,
+	"count_requests" integer DEFAULT 0 NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );

@@ -33,6 +33,8 @@ export const summarizationRequests = pgTable(
     duration: integer('duration'),
     errorMessage: text('error_message'),
     userId: text('user_id'),
+    requestIp: text('request_ip'),
+    countRequests: integer('count_requests').default(0).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
       .defaultNow()

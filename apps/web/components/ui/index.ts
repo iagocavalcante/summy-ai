@@ -10,3 +10,4 @@ export { SuccessAnimation } from './SuccessAnimation';
 export { EmptyState } from './EmptyState';
 export { TypewriterText } from './TypewriterText';
 export { MarkdownContent } from './MarkdownContent';
+export { RateLimitError } from './RateLimitError';

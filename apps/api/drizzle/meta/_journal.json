@@ -8,6 +8,13 @@
       "when": 1761228284663,
       "tag": "0000_flowery_marten_broadcloak",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1761863335412,
+      "tag": "0001_aberrant_richard_fisk",
+      "breakpoints": true
     }
   ]
 }
