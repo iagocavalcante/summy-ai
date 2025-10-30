@@ -26,7 +26,7 @@
     "test:k6:spike": "./k6/run-tests.sh spike",
     "test:k6:all": "./k6/run-tests.sh all",
     "migration:generate": "drizzle-kit generate",
-    "migration:run": "drizzle-kit migrate",
+    "migration:run": "tsx src/db/migrate.ts",
     "migration:push": "drizzle-kit push",
     "migration:studio": "drizzle-kit studio"
   },

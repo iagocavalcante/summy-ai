@@ -39,6 +39,7 @@ COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/apps/api/drizzle ./drizzle
 COPY --from=builder /app/apps/api/drizzle.config.ts ./drizzle.config.ts
 COPY --from=builder /app/apps/api/package.json ./package.json
+COPY --from=builder /app/apps/api/.env ./.env 2>/dev/null || true
 
 # Copy workspace files for pnpm deploy
 COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml

@@ -10,6 +10,9 @@ primary_region = "gru"  # Sao Paulo, Brazil - change as needed
   # Build context is the project root
   build-context = "../.."
 
+[deploy]
+  release_command = "node dist/src/db/migrate.js"
+
 [env]
   NODE_ENV = "production"
   PORT = "3000"
